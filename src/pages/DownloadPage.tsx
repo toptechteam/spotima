@@ -32,7 +32,7 @@ const DownloadPage = () => {
     element.setAttribute("download", convertedFileName);
     debugger
     // Create a dummy blob for demo purposes
-    const url = state.downloadUrl
+    const url = JSON.parse(state.downloadUrl) 
 
     element.setAttribute("href", url);
     document.body.appendChild(element);
