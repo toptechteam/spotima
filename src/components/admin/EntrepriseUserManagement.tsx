@@ -150,12 +150,10 @@ export function EntrepriseUserManagement({ entrepriseId, entrepriseName, onUserC
     }
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ entreprise_id: null })
-        .eq('id', userId);
-
-      if (error) throw error;
+      const formData = new FormData();
+      formData.append('entreprise_id', ''); // Empty string to clear the company
+      
+      await apiClient.deleteUser(userId);
 
       toast({
         title: "Utilisateur retiré",

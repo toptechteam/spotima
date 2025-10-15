@@ -217,7 +217,7 @@ class ApiClient {
   }
 
   async deleteUser(userId: string) {
-    return this.client.delete(`/users/${userId}`);
+    return this.client.delete(`/users/${userId}/`);
   }
 
   // User activation
