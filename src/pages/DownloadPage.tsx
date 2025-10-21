@@ -41,7 +41,7 @@ const DownloadPage = () => {
   };
 
   const handleRestart = () => {
-    navigate("/");
+    navigate("/upload/" + toolId);
   };
 
   return (

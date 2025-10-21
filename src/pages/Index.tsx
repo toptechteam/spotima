@@ -18,9 +18,9 @@ const allTools = [
   },
   {
     id: "lucca-fiche-salarie",
-    name: "Lucca (fiche salarié)",
-    description: "Consultation des fiches salariés via Lucca",
-    iconUrl: "/lovable-uploads/5858ca3e-d8f3-4c71-9310-9dc7d99d6b9b.png",
+    name: "Combo",
+    description: "Consultation des fiches salariés via Combo",
+    iconUrl: "/lovable-uploads/b9a86db7-bdbc-4474-8ab1-3b2cfd7ea08c.jpeg",
     category: "RH"
   },
   {
