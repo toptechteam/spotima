@@ -20,7 +20,7 @@ const allTools = [
     id: "lucca-fiche-salarie",
     name: "Combo",
     description: "Consultation des fiches salariés via Combo",
-    iconUrl: "/lovable-uploads/b9a86db7-bdbc-4474-8ab1-3b2cfd7ea08c.jpeg",
+    iconUrl: "/lovable-uploads/137a4d64-9f52-4604-b2ab-0cf7f4c6baa7.jpeg",
     category: "RH"
   },
   {
