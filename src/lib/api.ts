@@ -278,6 +278,11 @@ class ApiClient {
   async unassignToolFromEntreprise(toolId: string, entrepriseId: string) {
     return this.client.post(`/tools/${toolId}/unassign-entreprise`, { entrepriseId });
   }
+
+
+  async resendEmail(userId: string,) {
+    return this.client.post(`/users/${userId}/resend/`);
+  }
 }
 
 export const apiClient = new ApiClient();

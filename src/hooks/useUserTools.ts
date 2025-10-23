@@ -29,10 +29,8 @@ export function useUserTools() {
       console.log('Fetching tools for user:', user.id);
       // Fetch user's tool assignments
       const response = await apiClient.getToolAssigCompany();
-      debugger
       const assignments = response.data.results as UserToolAssignment[];
       const toolIds = assignments.map(assignment => assignment.id);
-
       console.log('User tools fetched:', toolIds);
       setUserTools([...new Set(toolIds)]); // Remove duplicates
     } catch (err) {
@@ -47,11 +45,9 @@ export function useUserTools() {
   // Set up polling instead of real-time subscriptions
   useEffect(() => {
     fetchUserTools();
-
     // Poll every 30 seconds for updates
-    const intervalId = setInterval(fetchUserTools, 30000);
-
-    return () => clearInterval(intervalId);
+    // const intervalId = setInterval(fetchUserTools, 30000);
+    // return () => clearInterval(intervalId);
   }, [fetchUserTools]);
 
   return { userTools, loading, refetch: fetchUserTools };

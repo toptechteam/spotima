@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, UserX, Crown, Edit, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { apiClient } from '@/lib/api';
 
 interface UserProfile {
   id: string;
@@ -16,7 +17,7 @@ interface UserProfile {
   role?: 'admin' | 'user';
   email_confirmed_at?: string | null;
   is_active?: boolean;
-  is_company_admin:  boolean;
+  is_company_admin: boolean;
 }
 
 interface UserListItemProps {
@@ -30,29 +31,28 @@ export function UserListItem({ user, onEdit, onRemove }: UserListItemProps) {
 
   const handleResendActivation = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Vous devez être connecté pour effectuer cette action.",
-        });
-        return;
-      }
+      // const { data: { session } } = await supabase.auth.getSession();
+      // if (!session) {
+      //   toast({
+      //     variant: "destructive",
+      //     title: "Erreur",
+      //     description: "Vous devez être connecté pour effectuer cette action.",
+      //   });
+      //   return;
+      // }
 
-      console.log('Calling resend activation for:', user.email);
+      // console.log('Calling resend activation for:', user.email);
 
-      const { data, error } = await supabase.functions.invoke('resend-activation-email', {
-        body: { userEmail: user.email },
-      });
 
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
+      const { data } = await apiClient.resendEmail(user.id);
+      // const { data, error } = await supabase.functions.invoke('resend-activation-email', {
+      //   body: { userEmail: user.email },
+      // });
+
+      debugger
 
       console.log('Function response:', data);
-      
+
       toast({
         title: "Email envoyé",
         description: `Le lien d'activation a été renvoyé à ${user.email}`,

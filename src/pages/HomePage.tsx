@@ -24,26 +24,26 @@ const HomePage = () => {
 
   // Mettre à jour les outils Lucca avec l'image correcte au premier chargement
   useEffect(() => {
-    const updateLuccaTools = async () => {
-      if (tools.length > 0) {
-        const luccaImageUrl = "/lovable-uploads/5858ca3e-d8f3-4c71-9310-9dc7d99d6b9b.png";
+    // const updateLuccaTools = async () => {
+    //   if (tools.length > 0) {
+    //     const luccaImageUrl = "/lovable-uploads/5858ca3e-d8f3-4c71-9310-9dc7d99d6b9b.png";
 
-        const luccaTools = tools.filter(tool =>
-          tool.name.toLowerCase().includes('lucca') && !tool.photo_url
-        );
+    //     const luccaTools = tools.filter(tool =>
+    //       tool.name.toLowerCase().includes('lucca') && !tool.photo_url
+    //     );
 
-        if (luccaTools.length > 0) {
-          const { supabase } = await import('@/integrations/supabase/client');
+    //     if (luccaTools.length > 0) {
+    //       const { supabase } = await import('@/integrations/supabase/client');
 
-          for (const tool of luccaTools) {
-            await supabase
-              .from('cards')
-              .update({ photo_url: luccaImageUrl })
-              .eq('id', tool.id);
-          }
-        }
-      }
-    };
+    //       for (const tool of luccaTools) {
+    //         await supabase
+    //           .from('cards')
+    //           .update({ photo_url: luccaImageUrl })
+    //           .eq('id', tool.id);
+    //       }
+    //     }
+    //   }
+    // };
 
     // updateLuccaTools();
   }, [tools]);
