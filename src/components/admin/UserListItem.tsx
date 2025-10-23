@@ -16,6 +16,7 @@ interface UserProfile {
   role?: 'admin' | 'user';
   email_confirmed_at?: string | null;
   is_active?: boolean;
+  is_company_admin:  boolean;
 }
 
 interface UserListItemProps {
@@ -93,7 +94,7 @@ export function UserListItem({ user, onEdit, onRemove }: UserListItemProps) {
         </div>
         <div className="flex flex-col gap-1">
           <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>
-            {user.role === 'admin' ? (
+            {user.is_company_admin ? (
               <>
                 <Crown className="h-3 w-3 mr-1" />
                 Administrateur
