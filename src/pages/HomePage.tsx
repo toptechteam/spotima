@@ -69,7 +69,7 @@ const HomePage = () => {
   console.log('Outils non assignés:', unavailableTools.map(t => t.name));
   const getToolIcon = (tool: { name: string; photo_url: string | null }) => {
     if (tool.photo_url) {
-      return <img src={tool.photo_url} alt={tool.name} className="h-12 w-12" />;
+      return <img src={tool.photo_url} alt={tool.name} className="w-full" />;
     }
     return <Wrench className="h-12 w-12" />;
   };

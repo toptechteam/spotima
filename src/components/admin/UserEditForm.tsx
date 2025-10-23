@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ImageUpload';
 
 interface UserProfile {
@@ -24,7 +25,8 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
   const [formData, setFormData] = useState({
     full_name: user.full_name || '',
     email: user.email || '',
-    photo_url: user.photo_url
+    photo_url: user.photo_url,
+     role: 'user' as 'admin' | 'user'
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
       const userData: any = {
         full_name: formData.full_name || '',
         email: formData.email,
+        role: formData.role
       };
 
       // Convert file to base64 if a new file is selected
@@ -128,6 +131,18 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           required
         />
+      </div>
+      <div>
+        <Label htmlFor="role">Rôle</Label>
+        <Select value={formData.role} onValueChange={(value: 'admin' | 'user') => setFormData({ ...formData, role: value })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="user">Utilisateur</SelectItem>
+            <SelectItem value="admin">Administrateur</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex justify-end gap-2">

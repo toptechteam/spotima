@@ -92,7 +92,7 @@ const UploadPage = () => {
           <Button
             variant="ghost"
             className="mb-8 text-gray-500 hover:text-gray-700"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la sélection d'outils

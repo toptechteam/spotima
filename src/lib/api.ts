@@ -4,6 +4,8 @@ export interface UserProfile {
   id: string;
   email: string | null;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   photo_url: string | null;
   created_at: string;
   updated_at: string;

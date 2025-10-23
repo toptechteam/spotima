@@ -17,10 +17,9 @@ export function useUserProfile() {
     }
 
     const fetchProfile = async () => {
-      debugger
       try {
         const response = await apiClient.getUserProfile();
-        setProfile(response.data.results);
+        setProfile(response.data);
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -32,8 +31,8 @@ export function useUserProfile() {
   }, [user]);
 
   const getFirstName = () => {
-    if (!profile?.full_name) return null;
-    return profile.full_name.split(' ')[0];
+    if (!profile?.first_name) return null;
+    return profile.first_name;
   };
 
   return { profile, loading, getFirstName };
