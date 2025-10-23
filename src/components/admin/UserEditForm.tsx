@@ -13,6 +13,7 @@ interface UserProfile {
   email: string;
   full_name: string | null;
   photo_url: string | null;
+  is_company_admin:  boolean;
 }
 
 interface UserEditFormProps {
@@ -22,11 +23,12 @@ interface UserEditFormProps {
 }
 
 export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
+  debugger
   const [formData, setFormData] = useState({
     full_name: user.full_name || '',
     email: user.email || '',
     photo_url: user.photo_url,
-     role: 'user' as 'admin' | 'user'
+     role: user.is_company_admin ?  'admin' : 'user'
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);

@@ -18,6 +18,7 @@ interface UserProfile {
   email_confirmed_at?: string | null;
   last_sign_in_at?: string | null;
   is_active?: boolean;
+  is_company_admin:  boolean;
 }
 
 interface EntrepriseUserManagementProps {
