@@ -5,16 +5,24 @@ import { useUserTools } from "@/hooks/useUserTools";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTools } from "@/hooks/useTools";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { Wrench } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Upload, Wrench } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ImageUpload";
+import { Camera } from "lucide-react";
 
 const HomePage = () => {
   const { user, loading } = useAuth();
   const { userTools, loading: toolsLoading } = useUserTools();
-  const { profile, getFirstName } = useUserProfile();
+  const { profile, getFirstName, refreshProfile } = useUserProfile();
   const { tools, loading: allToolsLoading } = useTools();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -73,6 +81,55 @@ const HomePage = () => {
     }
     return <Wrench className="h-12 w-12" />;
   };
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+  const UploadImage = async (file: File | null) => {
+    if (!file) return;
+    
+    setIsUploading(true);
+    
+    try {
+      debugger
+      const userData: any = {
+        photo_url: await fileToBase64(file),
+      };
+      // Update user profile with the new image
+      await apiClient.updateUser(profile?.id || '', userData);
+      
+      // Refresh the profile to show the new image
+      await refreshProfile();
+      
+      toast({
+        title: "Photo de profil mise à jour",
+        description: "Votre photo de profil a été mise à jour avec succès.",
+      });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de mettre à jour la photo de profil. Veuillez réessayer.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <Layout>
@@ -80,12 +137,33 @@ const HomePage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={profile?.photo_url || undefined} alt={firstName || "Utilisateur"} />
-                <AvatarFallback className="bg-soptima-100 text-soptima-700 font-semibold">
-                  {firstName ? firstName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar 
+                  className="h-12 w-12 cursor-pointer relative group" 
+                  onClick={handleAvatarClick}
+                >
+                  {isUploading ? (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-full flex items-center justify-center">
+                      <Camera className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                  <AvatarImage src={profile?.photo_url || undefined} alt={firstName || "Utilisateur"} />
+                  <AvatarFallback className="bg-soptima-100 text-soptima-700 font-semibold">
+                    {firstName ? firstName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => UploadImage(e.target.files?.[0] || null)}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
               <p className="text-xl text-muted-foreground">
                 {firstName ? `Bonjour ${firstName}` : 'Bonjour'}
               </p>

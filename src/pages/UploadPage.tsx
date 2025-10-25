@@ -53,30 +53,17 @@ const UploadPage = () => {
         body: formData,
         // Don't set Content-Type header, let the browser set it with the correct boundary
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+
         }
       });
 
       if (!response.ok) {
         throw new Error('File processing failed');
       }
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get('content-disposition');
-      const filename = contentDisposition
-        ? contentDisposition.split('filename=')[1].replace(/['"]/g, '')
-        : `converted_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const data = await response.json();
+      checkStatusOfFile(data.task_id);
 
-      // Create a download URL for the blob
-      const downloadUrl = window.URL.createObjectURL(blob);
-
-      navigate(`/download/${toolId}`, {
-        state: {
-          originalFileName: sourceFile.name,
-          targetFileName: targetFile.name,
-          convertedFileName: filename,
-          downloadUrl: JSON.stringify(downloadUrl)
-        }
-      });
     } catch (error) {
       console.error('Error processing files:', error);
       // You might want to show an error toast/message to the user here
@@ -84,6 +71,57 @@ const UploadPage = () => {
       setIsProcessing(false);
     }
   };
+
+  const checkStatusOfFile = async (id) => {
+    const response = await fetch(API_BASE_URL + `/file-processing/status/${id}/`, {
+      method: 'GET',
+      // Don't set Content-Type header, let the browser set it with the correct boundary
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('File processing failed');
+    }
+    const data = await response.json();
+    if (data.audit_status != 'completed') {
+      setTimeout(() => {
+        checkStatusOfFile(id);
+      }, 10000);
+      return;
+    }
+    downloadFile(id);
+  }
+
+  const downloadFile = async (id) => {
+    const response = await fetch(API_BASE_URL + `/file-processing/download/${id}/`, {
+      method: 'GET',
+      // Don't set Content-Type header, let the browser set it with the correct boundary
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get('content-disposition');
+    const filename = contentDisposition
+      ? contentDisposition.split('filename=')[1].replace(/['"]/g, '')
+      : `converted_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    // Create a download URL for the blob
+    const downloadUrl = window.URL.createObjectURL(blob);
+
+    navigate(`/download/${toolId}`, {
+      state: {
+        originalFileName: sourceFile.name,
+        targetFileName: targetFile.name,
+        convertedFileName: filename,
+        downloadUrl: JSON.stringify(downloadUrl)
+      }
+    });
+
+  }
+
 
   return (
     <Layout>

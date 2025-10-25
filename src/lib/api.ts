@@ -119,7 +119,7 @@ class ApiClient {
     return this.client.get(`/me/`);
   }
 
-  async updateUser(userId: string, formData: FormData, config?: any) {
+  async updateUser(userId: string, formData: any, config?: any) {
     return this.client.patch(`/users/${userId}/`, formData, config);
   }
 

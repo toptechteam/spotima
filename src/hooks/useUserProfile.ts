@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient, UserProfile } from '@/lib/api';
 
@@ -9,31 +9,37 @@ export function useUserProfile() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (!user) {
       setProfile(null);
       setLoading(false);
       return;
     }
 
-    const fetchProfile = async () => {
-      try {
-        const response = await apiClient.getUserProfile();
-        setProfile(response.data);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+    try {
+      setLoading(true);
+      const response = await apiClient.getUserProfile();
+      setProfile(response.data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const getFirstName = () => {
     if (!profile?.first_name) return null;
     return profile.first_name;
   };
 
-  return { profile, loading, getFirstName };
+  return { 
+    profile, 
+    loading, 
+    getFirstName, 
+    refreshProfile: fetchProfile 
+  };
 }
