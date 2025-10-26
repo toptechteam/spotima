@@ -11,15 +11,15 @@ import { useUserRole } from "@/hooks/useUserRole";
 const allTools = [
   {
     id: "lucca-conges",
-    name: "Lucca (congés)",
-    description: "Gestion des congés via Lucca",
+    name: "Lucca",
+    description: "Gestion des congés et des absences",
     iconUrl: "/lovable-uploads/5858ca3e-d8f3-4c71-9310-9dc7d99d6b9b.png",
     category: "RH"
   },
   {
     id: "lucca-fiche-salarie",
     name: "Combo",
-    description: "Consultation des fiches salariés via Combo",
+    description: "Gestion des plannings, du pointage",
     iconUrl: "/lovable-uploads/137a4d64-9f52-4604-b2ab-0cf7f4c6baa7.jpeg",
     category: "RH"
   },
