@@ -68,7 +68,7 @@ const UploadPage = () => {
       console.error('Error processing files:', error);
       // You might want to show an error toast/message to the user here
     } finally {
-      setIsProcessing(false);
+      
     }
   };
 
@@ -110,7 +110,7 @@ const UploadPage = () => {
 
     // Create a download URL for the blob
     const downloadUrl = window.URL.createObjectURL(blob);
-
+    setIsProcessing(false);
     navigate(`/download/${toolId}`, {
       state: {
         originalFileName: sourceFile.name,
