@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout";
 import { UploadZone } from "@/components/UploadZone";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileType2, Info } from "lucide-react";
-
+import { useToast } from '@/hooks/use-toast';
 const toolNames: Record<string, string> = {
   lucca: "Lucca",
   workday: "Workday",
@@ -22,7 +22,7 @@ const UploadPage = () => {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [targetFile, setTargetFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const { toast } = useToast();
   const toolName = toolId ? toolNames[toolId] : "l'outil sélectionné";
 
   const handleSourceFileUpload = (file: File) => {
@@ -68,7 +68,7 @@ const UploadPage = () => {
       console.error('Error processing files:', error);
       // You might want to show an error toast/message to the user here
     } finally {
-      
+
     }
   };
 
@@ -85,19 +85,29 @@ const UploadPage = () => {
       throw new Error('File processing failed');
     }
     const data = await response.json();
-    if (data.audit_status != 'completed') {
+    if (data.audit_status == 'processing') {
       setTimeout(() => {
         checkStatusOfFile(id);
       }, 10000);
       return;
     }
-    downloadFile(id);
+    else if (data.audit_status == 'failed') {
+      setIsProcessing(false);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: data.error_message,
+      });
+      return;
+    }
+
+
+    downloadFile(id, data.row_status);
   }
 
-  const downloadFile = async (id) => {
+  const downloadFile = async (id, status) => {
     const response = await fetch(API_BASE_URL + `/file-processing/download/${id}/`, {
       method: 'GET',
-      // Don't set Content-Type header, let the browser set it with the correct boundary
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -113,6 +123,8 @@ const UploadPage = () => {
     setIsProcessing(false);
     navigate(`/download/${toolId}`, {
       state: {
+        id: id,
+        status: status,
         originalFileName: sourceFile.name,
         targetFileName: targetFile.name,
         convertedFileName: filename,
