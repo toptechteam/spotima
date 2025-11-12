@@ -60,23 +60,20 @@ export function DownloadResult({ data, fileName, onDownload, onRestart }: Downlo
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
-                  {Object.keys(data[0] || {}).map((key) => (
-                    <>
-                      {key != 'row_data' && <th
-                        key={key}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      </th>
-                      }
-                    </>
-                  ))}
+                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> # </th>
+                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Status </th>
+                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Name </th>
+                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Error </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {data.map((error: any, index: number) => (
                   <tr key={index}>
-                    {Object.values(error).map((value: any, i) => (
+                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.rowno} </td>
+                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.status} </td>
+                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.row_data?.firstname}  {error.row_data?.surname} </td>
+                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.error} </td>
+                    {/* {Object.values(error).map((value: any, i) => (
                       <>
                         {Object.keys(error)[i] != 'row_data' && <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {String(value)}
@@ -84,9 +81,11 @@ export function DownloadResult({ data, fileName, onDownload, onRestart }: Downlo
                         }
                       </>
 
-                    ))}
+                    ))} */}
                   </tr>
                 ))}
+
+
               </tbody>
             </table>
           </div>  </div>
