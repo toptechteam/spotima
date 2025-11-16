@@ -33,7 +33,7 @@ export function DataFlowAnimation() {
         <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-2 shadow-sm">
           <div className="flex items-center justify-center">
             <img 
-              src="/lovable-uploads/7a277d3b-f78b-4de1-b9c9-e1db65274095.png"
+              src="https://media.licdn.com/dms/image/v2/D4E22AQEXMHD3ACkTnA/feedshare-shrink_800/B4EZSpdDmmHgAg-/0/1738009754679?e=2147483647&v=beta&t=HdGBA5TkvQO4bsgiAOyXZ3Lv-f5hRr_bHD3t8nzBfY0"
               alt="PayFit" 
               className="h-10 w-10 rounded"
             />

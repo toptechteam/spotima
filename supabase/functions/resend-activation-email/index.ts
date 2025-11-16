@@ -68,7 +68,7 @@ serve(async (req) => {
       type: 'signup',
       email: userEmail,
       options: {
-        emailRedirectTo: `${req.headers.get('origin') || 'https://preview--payfit-data-bridge.lovable.app'}/`
+        emailRedirectTo: `${req.headers.get('origin') || 'https://smart-bridge.soptime.fr/'}/`
       }
     })
 
@@ -81,7 +81,7 @@ serve(async (req) => {
         type: 'recovery',
         email: userEmail,
         options: {
-          redirectTo: `${req.headers.get('origin') || 'https://preview--payfit-data-bridge.lovable.app'}/auth/callback`
+          redirectTo: `${req.headers.get('origin') || 'https://smart-bridge.soptime.fr/'}/auth/callback`
         }
       })
 
