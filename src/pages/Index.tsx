@@ -13,28 +13,28 @@ const allTools = [
     id: "lucca-conges",
     name: "Lucca",
     description: "Gestion des congés et des absences",
-    iconUrl: "/lovable-uploads/5858ca3e-d8f3-4c71-9310-9dc7d99d6b9b.png",
+    iconUrl: "/assets/luca.png",
     category: "RH"
   },
   {
     id: "lucca-fiche-salarie",
     name: "Combo",
     description: "Gestion des plannings, du pointage",
-    iconUrl: "/lovable-uploads/137a4d64-9f52-4604-b2ab-0cf7f4c6baa7.jpeg",
+    iconUrl: "/assets/combo.png",
     category: "RH"
   },
   {
     id: "boondmanager",
     name: "BoondManager",
     description: "Gestion des ressources humaines et projets",
-    iconUrl: "/lovable-uploads/890a9f1c-f5e9-4f79-a148-42427c4fbe8e.png",
+    iconUrl: "/assets/bond.png",
     category: "ERP"
   },
   {
     id: "kelio",
     name: "Kelio",
     description: "Gestion des temps et des activités",
-    iconUrl: "/lovable-uploads/e2a0478c-4cbe-4499-b89a-02beafcbf1d2.png",
+    iconUrl: "/assets/kelio.png",
     category: "RH"
   }
 ];

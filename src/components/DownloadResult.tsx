@@ -54,7 +54,7 @@ export function DownloadResult({ data, fileName, onDownload, onRestart }: Downlo
       </div>
       {data && data.length > 0 &&
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-left w-1/2 mt-5 mx-auto">
-          <h3 className="text-sm font-medium text-red-800 mb-2">Errors</h3>
+          <h3 className="text-sm font-medium text-red-800 mb-2">Tâches manuelles à prévoir: non prises en charge par l'import multiple de Payfit</h3>
           <div className="mb-4 text-sm text-blue-700  h-[300px] overflow-y-auto">
 
             <table className="min-w-full divide-y divide-gray-200">
