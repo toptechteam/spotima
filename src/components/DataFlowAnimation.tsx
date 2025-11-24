@@ -1,5 +1,7 @@
 
 import { FileText } from "lucide-react";
+import PayFit from '@/assets/7a277d3b-f78b-4de1-b9c9-e1db65274095.png';
+
 
 export function DataFlowAnimation() {
   return (
@@ -33,7 +35,7 @@ export function DataFlowAnimation() {
         <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-2 shadow-sm">
           <div className="flex items-center justify-center">
             <img 
-              src="/assets/7a277d3b-f78b-4de1-b9c9-e1db65274095.png"
+              src={PayFit}
               alt="PayFit" 
               className="h-10 w-10 rounded"
             />

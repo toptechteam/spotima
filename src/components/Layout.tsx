@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Home } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import homelogo from '@/assets/homelogo.jpeg';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -51,7 +52,7 @@ function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center cursor-pointer ml-28" onClick={handleLogoClick}>
           <img
-            src="assets/soptimalogo.jpeg"
+            src={homelogo}
             alt="SOPTIMA Logo"
             className="h-8 w-auto"
           />

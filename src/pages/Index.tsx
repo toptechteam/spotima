@@ -7,34 +7,38 @@ import { useEffect } from "react";
 import { ToolCard } from "@/components/ToolCard";
 import { DataFlowAnimation } from "@/components/DataFlowAnimation";
 import { useUserRole } from "@/hooks/useUserRole";
+import Lucca from '@/assets/Kelio.png';
+import Combo from '@/assets/combo.png';
+import BoondManager from '@/assets/bond.png';
+import Kelio from '@/assets/Kelio.png';
 
 const allTools = [
   {
     id: "lucca-conges",
     name: "Lucca",
     description: "Gestion des congés et des absences",
-    iconUrl: "/assets/luca.png",
+    iconUrl: Lucca,
     category: "RH"
   },
   {
     id: "lucca-fiche-salarie",
     name: "Combo",
     description: "Gestion des plannings, du pointage",
-    iconUrl: "/assets/combo.png",
+    iconUrl: Combo,
     category: "RH"
   },
   {
     id: "boondmanager",
     name: "BoondManager",
     description: "Gestion des ressources humaines et projets",
-    iconUrl: "/assets/bond.png",
+    iconUrl: BoondManager,
     category: "ERP"
   },
   {
     id: "kelio",
     name: "Kelio",
     description: "Gestion des temps et des activités",
-    iconUrl: "/assets/kelio.png",
+    iconUrl: Kelio,
     category: "RH"
   }
 ];
@@ -74,17 +78,17 @@ const Index = () => {
             {/* Fond dégradé avec bords arrondis et marges */}
             <div className="relative">
               <div className="absolute inset-x-8 top-0 bottom-0 bg-gradient-to-b from-[#EAF3FF] to-white rounded-3xl"></div>
-              
+
               {/* Hero Section */}
               <div className="relative z-10 text-center px-16 py-16">
                 <h1 className="text-5xl font-bold mb-8" style={{ color: '#001E42' }}>
                   Smart Bridge
                 </h1>
                 <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-                  Évitez la ressaisie et simplifiez le processus de retraitement des données entre vos solutions SIRH/ERP et PayFit. 
+                  Évitez la ressaisie et simplifiez le processus de retraitement des données entre vos solutions SIRH/ERP et PayFit.
                   Notre Bridge automatise les transferts de données pour vous faire gagner du temps et réduire les erreurs.
                 </p>
-                
+
                 <div className="mb-8">
                   <Button
                     size="lg"
@@ -110,11 +114,11 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto bg-white rounded-t-3xl px-8 pt-8 pb-16 shadow-sm">
             <h2 className="text-3xl font-semibold text-center mb-12">Vos solutions SIRH / ERP</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {allTools.map((tool) => (
-                <ToolCard 
-                  key={tool.id} 
+                <ToolCard
+                  key={tool.id}
                   id={tool.id}
                   name={tool.name}
                   icon={<img src={tool.iconUrl} alt={tool.name} className="h-12 w-12" />}
