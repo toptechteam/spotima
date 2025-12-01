@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { ToolCard } from "@/components/ToolCard";
 import { DataFlowAnimation } from "@/components/DataFlowAnimation";
 import { useUserRole } from "@/hooks/useUserRole";
-import Lucca from '@/assets/Kelio.png';
+import Lucca from '@/assets/luca.png';
 import Combo from '@/assets/combo.png';
 import BoondManager from '@/assets/bond.png';
 import Kelio from '@/assets/Kelio.png';
