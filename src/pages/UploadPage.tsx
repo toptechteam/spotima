@@ -153,7 +153,7 @@ const UploadPage = () => {
               Importez vos fichiers
             </h1>
             <p className="text-gray-500">
-              Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle Payfit.
+              Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit.
             </p>
           </div>
 
@@ -178,7 +178,7 @@ const UploadPage = () => {
                 2. Fichier cible
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                Uploadez votre fichier cible Payfit à utiliser pour la conversion
+                Uploadez votre fichier cible PayFit à utiliser pour la conversion
               </p>
               <UploadZone
                 onFileUpload={handleTargetFileUpload}
@@ -219,10 +219,10 @@ const UploadPage = () => {
               <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
                 <h3 className="text-sm font-medium text-blue-800 mb-2">
-                  Comment télécharger le modèle Payfit ?
+                  Comment télécharger le modèle PayFit ?
                 </h3>
                 <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
-                  <li>Connectez-vous à votre espace Payfit</li>
+                  <li>Connectez-vous à votre espace PayFit</li>
                   <li>Dans le menu, cliquez sur "Absences et temps de travail"</li>
                   <li>Puis cliquez sur "Imports multiples"</li>
                   <li>Dans la section Import des variables de paie, cliquez sur l'icône "Importer" à droite</li>
