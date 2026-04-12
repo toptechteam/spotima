@@ -53,24 +53,24 @@ export function DownloadResult({ data, fileName, onDownload, onRestart }: Downlo
 
       </div>
       {data && data.length > 0 &&
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-left w-1/2 mt-5 mx-auto">
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 sm:p-6 text-left w-full max-w-6xl mt-8 mx-auto">
           <h3 className="text-sm font-medium text-red-800 mb-2">Tâches manuelles à prévoir: non prises en charge par l'import multiple de PayFit</h3>
-          <div className="mb-4 text-sm text-blue-700  h-[300px] overflow-y-auto">
+          <div className="mb-4 text-sm text-blue-700 max-h-[min(28rem,70vh)] overflow-y-auto overflow-x-auto rounded-md border border-blue-100">
 
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full min-w-[36rem] table-fixed divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
-                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> ligne# </th>
-                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Nom </th>
-                   <th  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Erreur </th>
+                   <th className="w-24 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> ligne# </th>
+                   <th className="w-56 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Nom </th>
+                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Erreur </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {data.map((error: any, index: number) => (
                   <tr key={index}>
-                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.rowno} </td>
-                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.row_data?.firstname}  {error.row_data?.surname} </td>
-                    <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {error.error} </td>
+                    <td key={index}  className="px-4 py-4 align-top text-sm text-gray-900 tabular-nums"> {error.rowno} </td>
+                    <td key={index} className="px-4 py-4 align-top text-sm text-gray-900 break-words"> {error.row_data?.firstname}  {error.row_data?.surname} </td>
+                    <td  key={index} className="px-4 py-4 align-top text-sm text-gray-900 break-words whitespace-normal"> {error.error} </td>
                     {/* {Object.values(error).map((value: any, i) => (
                       <>
                         {Object.keys(error)[i] != 'row_data' && <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
