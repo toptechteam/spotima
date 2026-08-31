@@ -51,7 +51,7 @@ const UploadPage = () => {
   }, [toolId]);
 
   const canSubmit = isLcFitness
-    ? Boolean(sourceFile && sourceFile2 && targetFile)
+    ? Boolean(targetFile && (sourceFile || sourceFile2))
     : Boolean(sourceFile && targetFile);
 
   const handleSubmit = async () => {
@@ -63,8 +63,10 @@ const UploadPage = () => {
 
     try {
       const formData = new FormData();
-      formData.append("input_file", sourceFile as File);
       formData.append("target_file", targetFile as File);
+      if (sourceFile) {
+        formData.append("input_file", sourceFile);
+      }
       if (isLcFitness && sourceFile2) {
         formData.append("input_file_2", sourceFile2);
       }
@@ -171,7 +173,7 @@ const UploadPage = () => {
             </h1>
             <p className="text-gray-500">
               {isLcFitness
-                ? "LC FITNESS : importez l'export comptable, le fichier salaire et le modèle PayFit."
+                ? "LC FITNESS : importez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit."
                 : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
             </p>
           </div>
@@ -281,7 +283,7 @@ const UploadPage = () => {
             {!canSubmit && (
               <p className="text-sm text-gray-500 mt-2">
                 {isLcFitness
-                  ? "Veuillez uploader les trois fichiers pour continuer"
+                  ? "Uploadez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit"
                   : "Veuillez uploader les deux fichiers pour continuer"}
               </p>
             )}
