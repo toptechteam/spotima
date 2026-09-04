@@ -9,8 +9,9 @@ import { apiClient } from "@/lib/api";
 
 const isLcFitnessTool = (name?: string | null) => {
   if (!name) return false;
-  const n = name.toLowerCase().replace(/\s+/g, "");
-  return n.includes("lcfitness") || name.toLowerCase().includes("lc fitness");
+  const lower = name.toLowerCase();
+  const compact = lower.replace(/[\s_\-]+/g, "");
+  return compact.includes("lcfitness") || lower.includes("lc fitness");
 };
 
 const UploadPage = () => {
@@ -28,11 +29,18 @@ const UploadPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [toolDisplayName, setToolDisplayName] = useState<string>("l'outil sélectionné");
   const [isLcFitness, setIsLcFitness] = useState(false);
+  // Avoid rendering the wrong layout first (2 slots → 3 slots swap causes DOM removeChild errors)
+  const [toolReady, setToolReady] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!toolId) return;
     let cancelled = false;
+    setToolReady(false);
+    setIsLcFitness(false);
+    setSourceFile(null);
+    setSourceFile2(null);
+    setTargetFile(null);
     (async () => {
       try {
         const response = await apiClient.getToolById(toolId);
@@ -43,6 +51,10 @@ const UploadPage = () => {
         setIsLcFitness(isLcFitnessTool(name));
       } catch (err) {
         console.error("Failed to load tool", err);
+      } finally {
+        if (!cancelled) {
+          setToolReady(true);
+        }
       }
     })();
     return () => {
@@ -172,22 +184,29 @@ const UploadPage = () => {
               Importez vos fichiers
             </h1>
             <p className="text-gray-500">
-              {isLcFitness
-                ? "LC FITNESS : importez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit."
-                : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
+              {!toolReady
+                ? "Chargement de l'outil…"
+                : isLcFitness
+                  ? "LC FITNESS : choisissez le fichier comptable, le fichier salaire, ou les deux — puis le modèle PayFit."
+                  : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
             </p>
           </div>
 
-          {isLcFitness ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {!toolReady ? (
+            <div className="flex justify-center py-16 text-gray-500" aria-busy="true">
+              Chargement des zones d&apos;import…
+            </div>
+          ) : isLcFitness ? (
+            <div key={`lc-${toolId}`} className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   1. Export comptable
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Fichier LC FITNESS Holding – établissement (optionnel)
+                  Fichier LC FITNESS Holding – établissement (optionnel — seul ou avec le salaire)
                 </p>
                 <UploadZone
+                  key={`lc-comptable-${toolId}`}
                   onFileUpload={setSourceFile}
                   acceptedFileTypes=".xlsx,.xls"
                 />
@@ -197,9 +216,10 @@ const UploadPage = () => {
                   2. Fichier salaire
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Fichier Salaire du mois (optionnel)
+                  Fichier Salaire du mois (optionnel — seul ou avec le comptable)
                 </p>
                 <UploadZone
+                  key={`lc-salaire-${toolId}`}
                   onFileUpload={setSourceFile2}
                   acceptedFileTypes=".xlsx,.xls"
                 />
@@ -209,16 +229,17 @@ const UploadPage = () => {
                   3. Fichier cible PayFit
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Modèle import_variables_paie
+                  Modèle import_variables_paie (obligatoire)
                 </p>
                 <UploadZone
+                  key={`lc-payfit-${toolId}`}
                   onFileUpload={setTargetFile}
                   acceptedFileTypes=".xlsx,.xls"
                 />
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div key={`std-${toolId}`} className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   1. Fichier source {toolDisplayName}
@@ -227,6 +248,7 @@ const UploadPage = () => {
                   Uploadez votre fichier source
                 </p>
                 <UploadZone
+                  key={`std-source-${toolId}`}
                   onFileUpload={setSourceFile}
                   acceptedFileTypes=".xlsx,.csv,.xls"
                 />
@@ -239,6 +261,7 @@ const UploadPage = () => {
                   Uploadez votre fichier cible PayFit à utiliser pour la conversion
                 </p>
                 <UploadZone
+                  key={`std-target-${toolId}`}
                   onFileUpload={setTargetFile}
                   acceptedFileTypes=".xlsx,.xls"
                 />
@@ -249,7 +272,7 @@ const UploadPage = () => {
           <div className="text-center mt-8 mb-8">
             <Button
               onClick={handleSubmit}
-              disabled={!canSubmit || isProcessing}
+              disabled={!toolReady || !canSubmit || isProcessing}
               className="w-full sm:w-auto px-8"
             >
               {isProcessing ? (
@@ -280,7 +303,7 @@ const UploadPage = () => {
                 "Traiter les fichiers"
               )}
             </Button>
-            {!canSubmit && (
+            {toolReady && !canSubmit && (
               <p className="text-sm text-gray-500 mt-2">
                 {isLcFitness
                   ? "Uploadez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit"

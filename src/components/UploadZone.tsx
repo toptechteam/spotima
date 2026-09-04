@@ -5,7 +5,7 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface UploadZoneProps {
-  onFileUpload: (file: File) => void;
+  onFileUpload: (file: File | null) => void;
   acceptedFileTypes?: string;
   className?: string;
 }
@@ -104,6 +104,7 @@ export function UploadZone({
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }
+                  onFileUpload(null);
                 }}
               >
                 Changer de fichier
