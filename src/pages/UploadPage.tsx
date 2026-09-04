@@ -185,7 +185,7 @@ const UploadPage = () => {
                   1. Export comptable
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Fichier LC FITNESS Holding – établissement
+                  Fichier LC FITNESS Holding – établissement (optionnel)
                 </p>
                 <UploadZone
                   onFileUpload={setSourceFile}
@@ -197,7 +197,7 @@ const UploadPage = () => {
                   2. Fichier salaire
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  Fichier Salaire du mois
+                  Fichier Salaire du mois (optionnel)
                 </p>
                 <UploadZone
                   onFileUpload={setSourceFile2}
