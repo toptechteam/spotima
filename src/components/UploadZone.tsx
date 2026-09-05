@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Upload } from "lucide-react";
@@ -10,10 +9,10 @@ interface UploadZoneProps {
   className?: string;
 }
 
-export function UploadZone({ 
-  onFileUpload, 
-  acceptedFileTypes = ".xlsx,.csv", 
-  className 
+export function UploadZone({
+  onFileUpload,
+  acceptedFileTypes = ".xlsx,.csv",
+  className,
 }: UploadZoneProps) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -46,8 +45,8 @@ export function UploadZone({
   };
 
   const processFile = (file: File) => {
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+
     if (!fileExt || !acceptedFileTypes.includes(`.${fileExt}`)) {
       alert(`Veuillez sélectionner un fichier au format ${acceptedFileTypes}`);
       return;
@@ -63,15 +62,26 @@ export function UploadZone({
     }
   };
 
+  const clearFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFileName(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    onFileUpload(null);
+  };
+
+  const hasFile = Boolean(fileName);
+
   return (
-    <div className={cn(className)}>
+    <div className={cn(className)} translate="no">
       <div
         className={cn(
           "border-2 border-dashed rounded-xl p-12 cursor-pointer transition-all text-center",
-          isDraggingOver 
-            ? "border-soptima-400 bg-soptima-50" 
+          isDraggingOver
+            ? "border-soptima-400 bg-soptima-50"
             : "border-gray-300 hover:border-soptima-300 bg-gray-50 hover:bg-gray-100",
-          fileName ? "border-green-300 bg-green-50" : ""
+          hasFile ? "border-green-300 bg-green-50" : ""
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -85,47 +95,56 @@ export function UploadZone({
           accept={acceptedFileTypes}
           className="hidden"
         />
-        <div className="flex flex-col items-center">
-          {fileName ? (
-            <>
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <p className="text-lg font-medium text-gray-900 mb-1">Fichier sélectionné</p>
-              <p className="text-sm text-gray-500 mb-4">{fileName}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFileName(null);
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                  }
-                  onFileUpload(null);
-                }}
+        {/* Stable tree: toggle visibility instead of remounting children (avoids removeChild errors) */}
+        <div className="flex flex-col items-center relative min-h-[11rem]">
+          <div
+            className={cn(
+              "flex flex-col items-center w-full",
+              hasFile ? "block" : "hidden"
+            )}
+          >
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Changer de fichier
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="w-16 h-16 bg-soptima-100 rounded-full flex items-center justify-center mb-4">
-                <Upload className="h-8 w-8 text-soptima-600" />
-              </div>
-              <p className="text-lg font-medium text-gray-900 mb-1">
-                Déposez votre fichier ici
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                ou cliquez pour sélectionner un fichier
-              </p>
-              <p className="text-xs text-gray-500">
-                Formats acceptés: {acceptedFileTypes}
-              </p>
-            </>
-          )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <p className="text-lg font-medium text-gray-900 mb-1">Fichier sélectionné</p>
+            <p className="text-sm text-gray-500 mb-4 break-all px-2">{fileName}</p>
+            <Button variant="outline" size="sm" type="button" onClick={clearFile}>
+              Changer de fichier
+            </Button>
+          </div>
+
+          <div
+            className={cn(
+              "flex flex-col items-center w-full",
+              hasFile ? "hidden" : "block"
+            )}
+          >
+            <div className="w-16 h-16 bg-soptima-100 rounded-full flex items-center justify-center mb-4">
+              <Upload className="h-8 w-8 text-soptima-600" />
+            </div>
+            <p className="text-lg font-medium text-gray-900 mb-1">
+              Déposez votre fichier ici
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              ou cliquez pour sélectionner un fichier
+            </p>
+            <p className="text-xs text-gray-500">
+              Formats acceptés: {acceptedFileTypes}
+            </p>
+          </div>
         </div>
       </div>
     </div>

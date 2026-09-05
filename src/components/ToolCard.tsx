@@ -31,7 +31,7 @@ export function ToolCard({
 
   const handleCardClick = () => {
     if (isClickable && (isAssigned || !isAuthenticated)) {
-      navigate(`/upload/${id}`);
+      navigate(`/upload/${id}`, { state: { toolName: name } });
     }
   };
 

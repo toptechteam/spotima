@@ -17,7 +17,6 @@ export function useUserRole() {
       }
 
       try {
-        debugger
         const response = await apiClient.getUser();
         const userRoles = response.data;
         const userRole = userRoles[0]?.role || null;

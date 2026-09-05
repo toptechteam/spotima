@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { UploadZone } from "@/components/UploadZone";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
 
@@ -12,6 +12,10 @@ const isLcFitnessTool = (name?: string | null) => {
   const lower = name.toLowerCase();
   const compact = lower.replace(/[\s_\-]+/g, "");
   return compact.includes("lcfitness") || lower.includes("lc fitness");
+};
+
+type UploadLocationState = {
+  toolName?: string;
 };
 
 const UploadPage = () => {
@@ -23,43 +27,49 @@ const UploadPage = () => {
       : `${window.location.origin}/api`);
   const { toolId } = useParams<{ toolId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const navState = (location.state as UploadLocationState | null) || null;
+  const initialToolName = navState?.toolName || "l'outil sélectionné";
+
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceFile2, setSourceFile2] = useState<File | null>(null);
   const [targetFile, setTargetFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [toolDisplayName, setToolDisplayName] = useState<string>("l'outil sélectionné");
-  const [isLcFitness, setIsLcFitness] = useState(false);
-  // Avoid rendering the wrong layout first (2 slots → 3 slots swap causes DOM removeChild errors)
-  const [toolReady, setToolReady] = useState(false);
+  const [toolDisplayName, setToolDisplayName] = useState(initialToolName);
+  // Detect from nav state immediately so first paint already shows 3 slots for LC Fitness
+  const [isLcFitness, setIsLcFitness] = useState(() =>
+    isLcFitnessTool(navState?.toolName)
+  );
   const { toast } = useToast();
 
   useEffect(() => {
     if (!toolId) return;
     let cancelled = false;
-    setToolReady(false);
-    setIsLcFitness(false);
     setSourceFile(null);
     setSourceFile2(null);
     setTargetFile(null);
+
     (async () => {
       try {
         const response = await apiClient.getToolById(toolId);
         const tool = response.data;
         if (cancelled) return;
-        const name = tool?.name || "l'outil sélectionné";
+        const name = tool?.name || navState?.toolName || "l'outil sélectionné";
         setToolDisplayName(name);
         setIsLcFitness(isLcFitnessTool(name));
       } catch (err) {
         console.error("Failed to load tool", err);
-      } finally {
-        if (!cancelled) {
-          setToolReady(true);
+        if (!cancelled && navState?.toolName) {
+          setToolDisplayName(navState.toolName);
+          setIsLcFitness(isLcFitnessTool(navState.toolName));
         }
       }
     })();
+
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only refetch when toolId changes
   }, [toolId]);
 
   const canSubmit = isLcFitness
@@ -109,66 +119,87 @@ const UploadPage = () => {
     }
   };
 
-  const checkStatusOfFile = async (id) => {
-    const response = await fetch(API_BASE_URL + `/file-processing/status/${id}/`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+  const checkStatusOfFile = async (id: string) => {
+    try {
+      const response = await fetch(API_BASE_URL + `/file-processing/status/${id}/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("File processing failed");
-    }
-    const data = await response.json();
-    if (data.audit_status == "processing") {
-      setTimeout(() => {
-        checkStatusOfFile(id);
-      }, 10000);
-      return;
-    } else if (data.audit_status == "failed") {
+      if (!response.ok) {
+        throw new Error("File processing failed");
+      }
+      const data = await response.json();
+      if (data.audit_status == "processing") {
+        setTimeout(() => {
+          checkStatusOfFile(id);
+        }, 10000);
+        return;
+      } else if (data.audit_status == "failed") {
+        setIsProcessing(false);
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: data.error_message || "Le traitement a échoué.",
+        });
+        return;
+      }
+
+      downloadFile(id, data.row_status);
+    } catch (error) {
+      console.error("Status check failed:", error);
       setIsProcessing(false);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: data.error_message,
+        description: "Impossible de vérifier le statut du traitement.",
       });
-      return;
     }
-
-    downloadFile(id, data.row_status);
   };
 
-  const downloadFile = async (id, status) => {
-    const response = await fetch(API_BASE_URL + `/file-processing/download/${id}/`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    const blob = await response.blob();
-    const contentDisposition = response.headers.get("content-disposition");
-    const filename = contentDisposition
-      ? contentDisposition.split("filename=")[1].replace(/['"]/g, "")
-      : `converted_${new Date().toISOString().split("T")[0]}.xlsx`;
+  const downloadFile = async (id: string, status: string) => {
+    try {
+      const response = await fetch(API_BASE_URL + `/file-processing/download/${id}/`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("content-disposition");
+      const filename = contentDisposition
+        ? contentDisposition.split("filename=")[1].replace(/['"]/g, "")
+        : `converted_${new Date().toISOString().split("T")[0]}.xlsx`;
 
-    const downloadUrl = window.URL.createObjectURL(blob);
-    setIsProcessing(false);
-    navigate(`/download/${toolId}`, {
-      state: {
-        id: id,
-        status: status,
-        originalFileName: sourceFile?.name,
-        targetFileName: targetFile?.name,
-        convertedFileName: filename,
-        downloadUrl: JSON.stringify(downloadUrl),
-      },
-    });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      setIsProcessing(false);
+      navigate(`/download/${toolId}`, {
+        state: {
+          id: id,
+          status: status,
+          originalFileName: sourceFile?.name,
+          targetFileName: targetFile?.name,
+          convertedFileName: filename,
+          downloadUrl: JSON.stringify(downloadUrl),
+          toolName: toolDisplayName,
+        },
+      });
+    } catch (error) {
+      console.error("Download failed:", error);
+      setIsProcessing(false);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Le téléchargement du fichier a échoué.",
+      });
+    }
   };
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12" translate="no">
         <div className="max-w-4xl mx-auto">
           <Button
             variant="ghost"
@@ -176,7 +207,7 @@ const UploadPage = () => {
             onClick={() => navigate("/home")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à la sélection d'outils
+            <span>Retour à la sélection d&apos;outils</span>
           </Button>
 
           <div className="text-center mb-10">
@@ -184,126 +215,82 @@ const UploadPage = () => {
               Importez vos fichiers
             </h1>
             <p className="text-gray-500">
-              {!toolReady
-                ? "Chargement de l'outil…"
-                : isLcFitness
-                  ? "LC FITNESS : choisissez le fichier comptable, le fichier salaire, ou les deux — puis le modèle PayFit."
-                  : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
+              {isLcFitness
+                ? "LC FITNESS : choisissez le fichier comptable, le fichier salaire, ou les deux — puis le modèle PayFit."
+                : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
             </p>
           </div>
 
-          {!toolReady ? (
-            <div className="flex justify-center py-16 text-gray-500" aria-busy="true">
-              Chargement des zones d&apos;import…
+          {/* Stable DOM: always mount both optional source zones; hide salaire for non-LC */}
+          <div
+            className={
+              isLcFitness
+                ? "grid grid-cols-1 md:grid-cols-3 gap-6"
+                : "grid grid-cols-1 md:grid-cols-2 gap-8"
+            }
+          >
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                {isLcFitness
+                  ? "1. Export comptable"
+                  : `1. Fichier source ${toolDisplayName}`}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                {isLcFitness
+                  ? "Fichier LC FITNESS Holding – établissement (optionnel)"
+                  : "Uploadez votre fichier source"}
+              </p>
+              <UploadZone
+                onFileUpload={setSourceFile}
+                acceptedFileTypes={isLcFitness ? ".xlsx,.xls" : ".xlsx,.csv,.xls"}
+              />
             </div>
-          ) : isLcFitness ? (
-            <div key={`lc-${toolId}`} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  1. Export comptable
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Fichier LC FITNESS Holding – établissement (optionnel — seul ou avec le salaire)
-                </p>
-                <UploadZone
-                  key={`lc-comptable-${toolId}`}
-                  onFileUpload={setSourceFile}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  2. Fichier salaire
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Fichier Salaire du mois (optionnel — seul ou avec le comptable)
-                </p>
-                <UploadZone
-                  key={`lc-salaire-${toolId}`}
-                  onFileUpload={setSourceFile2}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  3. Fichier cible PayFit
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Modèle import_variables_paie (obligatoire)
-                </p>
-                <UploadZone
-                  key={`lc-payfit-${toolId}`}
-                  onFileUpload={setTargetFile}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
+
+            <div className={isLcFitness ? undefined : "hidden"} aria-hidden={!isLcFitness}>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                2. Fichier salaire
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Fichier Salaire du mois (optionnel)
+              </p>
+              <UploadZone
+                onFileUpload={setSourceFile2}
+                acceptedFileTypes=".xlsx,.xls"
+              />
             </div>
-          ) : (
-            <div key={`std-${toolId}`} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  1. Fichier source {toolDisplayName}
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Uploadez votre fichier source
-                </p>
-                <UploadZone
-                  key={`std-source-${toolId}`}
-                  onFileUpload={setSourceFile}
-                  acceptedFileTypes=".xlsx,.csv,.xls"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  2. Fichier cible
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Uploadez votre fichier cible PayFit à utiliser pour la conversion
-                </p>
-                <UploadZone
-                  key={`std-target-${toolId}`}
-                  onFileUpload={setTargetFile}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
+
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                {isLcFitness ? "3. Fichier cible PayFit" : "2. Fichier cible"}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                {isLcFitness
+                  ? "Modèle import_variables_paie (obligatoire)"
+                  : "Uploadez votre fichier cible PayFit à utiliser pour la conversion"}
+              </p>
+              <UploadZone
+                onFileUpload={setTargetFile}
+                acceptedFileTypes=".xlsx,.xls"
+              />
             </div>
-          )}
+          </div>
 
           <div className="text-center mt-8 mb-8">
             <Button
               onClick={handleSubmit}
-              disabled={!toolReady || !canSubmit || isProcessing}
+              disabled={!canSubmit || isProcessing}
               className="w-full sm:w-auto px-8"
             >
-              {isProcessing ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Traitement en cours...
-                </>
-              ) : (
-                "Traiter les fichiers"
-              )}
+              <span className="inline-flex items-center justify-center gap-2">
+                {isProcessing ? (
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                ) : null}
+                <span>
+                  {isProcessing ? "Traitement en cours..." : "Traiter les fichiers"}
+                </span>
+              </span>
             </Button>
-            {toolReady && !canSubmit && (
+            {!canSubmit && (
               <p className="text-sm text-gray-500 mt-2">
                 {isLcFitness
                   ? "Uploadez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit"
@@ -321,11 +308,11 @@ const UploadPage = () => {
                 </h3>
                 <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
                   <li>Connectez-vous à votre espace PayFit</li>
-                  <li>Dans le menu, cliquez sur "Absences et temps de travail"</li>
-                  <li>Puis cliquez sur "Imports multiples"</li>
+                  <li>Dans le menu, cliquez sur &quot;Absences et temps de travail&quot;</li>
+                  <li>Puis cliquez sur &quot;Imports multiples&quot;</li>
                   <li>
-                    Dans la section Import des variables de paie, cliquez sur l'icône
-                    "Importer" à droite
+                    Dans la section Import des variables de paie, cliquez sur l&apos;icône
+                    &quot;Importer&quot; à droite
                   </li>
                   <li>Puis téléchargez un modèle</li>
                 </ol>

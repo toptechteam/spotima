@@ -35,14 +35,12 @@ const DownloadPage = () => {
     // In a real app, this would trigger an actual file download
     const element = document.createElement("a");
     element.setAttribute("download", convertedFileName);
-    debugger
-    // Create a dummy blob for demo purposes
-    const url = JSON.parse(state.downloadUrl)
+    const url = JSON.parse(state.downloadUrl);
 
     element.setAttribute("href", url);
     document.body.appendChild(element);
     element.click();
-    document.body.removeChild(element);
+    element.remove();
   };
 
   const handleRestart = () => {
