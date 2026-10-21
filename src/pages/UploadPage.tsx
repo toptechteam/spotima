@@ -14,6 +14,13 @@ const isLcFitnessTool = (name?: string | null) => {
   return compact.includes("lcfitness") || lower.includes("lc fitness");
 };
 
+const isSolyonTool = (name?: string | null) => {
+  if (!name) return false;
+  const lower = name.toLowerCase();
+  const compact = lower.replace(/[\s_\-']+/g, "");
+  return compact.includes("solyon");
+};
+
 type UploadLocationState = {
   toolName?: string;
 };
@@ -34,11 +41,15 @@ const UploadPage = () => {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [sourceFile2, setSourceFile2] = useState<File | null>(null);
   const [targetFile, setTargetFile] = useState<File | null>(null);
+  const [targetFile2, setTargetFile2] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toolDisplayName, setToolDisplayName] = useState(initialToolName);
-  // Detect from nav state immediately so first paint already shows 3 slots for LC Fitness
+  // Detect from nav state immediately so first paint already shows the right slots
   const [isLcFitness, setIsLcFitness] = useState(() =>
     isLcFitnessTool(navState?.toolName)
+  );
+  const [isSolyon, setIsSolyon] = useState(() =>
+    isSolyonTool(navState?.toolName)
   );
   const { toast } = useToast();
 
@@ -48,6 +59,7 @@ const UploadPage = () => {
     setSourceFile(null);
     setSourceFile2(null);
     setTargetFile(null);
+    setTargetFile2(null);
 
     (async () => {
       try {
@@ -57,11 +69,13 @@ const UploadPage = () => {
         const name = tool?.name || navState?.toolName || "l'outil sélectionné";
         setToolDisplayName(name);
         setIsLcFitness(isLcFitnessTool(name));
+        setIsSolyon(isSolyonTool(name));
       } catch (err) {
         console.error("Failed to load tool", err);
         if (!cancelled && navState?.toolName) {
           setToolDisplayName(navState.toolName);
           setIsLcFitness(isLcFitnessTool(navState.toolName));
+          setIsSolyon(isSolyonTool(navState.toolName));
         }
       }
     })();
@@ -72,7 +86,9 @@ const UploadPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only refetch when toolId changes
   }, [toolId]);
 
-  const canSubmit = isLcFitness
+  const canSubmit = isSolyon
+    ? Boolean(targetFile && targetFile2 && (sourceFile || sourceFile2))
+    : isLcFitness
     ? Boolean(targetFile && (sourceFile || sourceFile2))
     : Boolean(sourceFile && targetFile);
 
@@ -86,10 +102,13 @@ const UploadPage = () => {
     try {
       const formData = new FormData();
       formData.append("target_file", targetFile as File);
+      if (isSolyon && targetFile2) {
+        formData.append("target_file_2", targetFile2);
+      }
       if (sourceFile) {
         formData.append("input_file", sourceFile);
       }
-      if (isLcFitness && sourceFile2) {
+      if ((isLcFitness || isSolyon) && sourceFile2) {
         formData.append("input_file_2", sourceFile2);
       }
       if (toolId) {
@@ -215,13 +234,68 @@ const UploadPage = () => {
               Importez vos fichiers
             </h1>
             <p className="text-gray-500">
-              {isLcFitness
+              {isSolyon
+                ? "SO'LYON MUTUELLE : importez le fichier Données_paie, le fichier Silae, ou les deux — puis les deux modèles PayFit (import_variables_paie et import_salaire_net)."
+                : isLcFitness
                 ? "LC FITNESS : choisissez le fichier comptable, le fichier salaire, ou les deux — puis le modèle PayFit."
                 : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
             </p>
           </div>
 
-          {/* Stable DOM: always mount both optional source zones; hide salaire for non-LC */}
+          {/* SO'LYON: two source files + two PayFit templates */}
+          {isSolyon ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  1. Données_paie
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Fichier source Données_paie (optionnel)
+                </p>
+                <UploadZone
+                  onFileUpload={setSourceFile}
+                  acceptedFileTypes=".xlsx,.xls"
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  2. Silae
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Fichier source Silae (optionnel)
+                </p>
+                <UploadZone
+                  onFileUpload={setSourceFile2}
+                  acceptedFileTypes=".xlsx,.xls"
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  3. Modèle import_variables_paie
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Modèle PayFit import_variables_paie (obligatoire)
+                </p>
+                <UploadZone
+                  onFileUpload={setTargetFile}
+                  acceptedFileTypes=".xlsx,.xls"
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  4. Modèle import_salaire_net
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Modèle PayFit import_salaire_net (obligatoire)
+                </p>
+                <UploadZone
+                  onFileUpload={setTargetFile2}
+                  acceptedFileTypes=".xlsx,.xls"
+                />
+              </div>
+            </div>
+          ) : (
+          /* Stable DOM: always mount both optional source zones; hide salaire for non-LC */
           <div
             className={
               isLcFitness
@@ -274,6 +348,7 @@ const UploadPage = () => {
               />
             </div>
           </div>
+          )}
 
           <div className="text-center mt-8 mb-8">
             <Button
@@ -292,7 +367,9 @@ const UploadPage = () => {
             </Button>
             {!canSubmit && (
               <p className="text-sm text-gray-500 mt-2">
-                {isLcFitness
+                {isSolyon
+                  ? "Uploadez au moins un fichier source (Données_paie et/ou Silae) et les deux modèles PayFit"
+                  : isLcFitness
                   ? "Uploadez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit"
                   : "Veuillez uploader les deux fichiers pour continuer"}
               </p>
