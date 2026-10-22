@@ -2,15 +2,24 @@
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 
+interface DownloadFile {
+  name: string;
+  url: string;
+}
+
 interface DownloadResultProps {
   data: any;
-  fileName: string;
-  onDownload: () => void;
+  files: DownloadFile[];
+  onDownload: (file: DownloadFile) => void;
   onRestart: () => void;
 }
 
-export function DownloadResult({ data, fileName, onDownload, onRestart }: DownloadResultProps) {
-  debugger
+// "SMART BRIDGE - import_salaire_net 12.xlsx" → "import_salaire_net"
+const payfitLabel = (name: string) =>
+  name.replace(/^SMART BRIDGE - /, "").replace(/\s+\d+\.xlsx$/i, "").replace(/\.xlsx$/i, "");
+
+export function DownloadResult({ data, files, onDownload, onRestart }: DownloadResultProps) {
+  const multiple = files.length > 1;
   return (
     <>
 
@@ -22,18 +31,32 @@ export function DownloadResult({ data, fileName, onDownload, onRestart }: Downlo
         </div>
 
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Votre fichier au format PayFit est prêt !
+          {multiple
+            ? "Vos fichiers au format PayFit sont prêts\u00a0!"
+            : "Votre fichier au format PayFit est prêt\u00a0!"}
         </h2>
 
         <p className="text-gray-500 mb-6">
-          Le fichier <span className="font-medium text-gray-700">{fileName}</span> a été généré avec succès et est prêt à être téléchargé.
+          {multiple ? (
+            <>
+              {files.length} fichiers ont été générés avec succès et sont prêts à être
+              téléchargés.
+            </>
+          ) : (
+            <>
+              Le fichier <span className="font-medium text-gray-700">{files[0]?.name}</span> a
+              été généré avec succès et est prêt à être téléchargé.
+            </>
+          )}
         </p>
 
         <div className="flex flex-col w-full gap-3 mb-6">
-          <Button onClick={onDownload} className="gap-2">
-            <FileDown size={18} />
-            Télécharger le fichier PayFit
-          </Button>
+          {files.map((file) => (
+            <Button key={file.name} onClick={() => onDownload(file)} className="gap-2">
+              <FileDown size={18} />
+              {multiple ? `Télécharger ${payfitLabel(file.name)}` : "Télécharger le fichier PayFit"}
+            </Button>
+          ))}
 
           <Button variant="outline" onClick={onRestart}>
             Traiter un autre fichier

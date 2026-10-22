@@ -7,12 +7,15 @@ interface UploadZoneProps {
   onFileUpload: (file: File | null) => void;
   acceptedFileTypes?: string;
   className?: string;
+  /** Narrow columns (e.g. 4 zones side by side): less padding, wrapping button. */
+  compact?: boolean;
 }
 
 export function UploadZone({
   onFileUpload,
   acceptedFileTypes = ".xlsx,.csv",
   className,
+  compact = false,
 }: UploadZoneProps) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -77,7 +80,8 @@ export function UploadZone({
     <div className={cn(className)} translate="no">
       <div
         className={cn(
-          "border-2 border-dashed rounded-xl p-12 cursor-pointer transition-all text-center",
+          "border-2 border-dashed rounded-xl cursor-pointer transition-all text-center",
+          compact ? "p-6" : "p-12",
           isDraggingOver
             ? "border-soptima-400 bg-soptima-50"
             : "border-gray-300 hover:border-soptima-300 bg-gray-50 hover:bg-gray-100",
@@ -100,7 +104,7 @@ export function UploadZone({
           <div
             className={cn(
               "flex flex-col items-center w-full",
-              hasFile ? "block" : "hidden"
+              hasFile ? "flex" : "hidden"
             )}
           >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -121,7 +125,13 @@ export function UploadZone({
             </div>
             <p className="text-lg font-medium text-gray-900 mb-1">Fichier sélectionné</p>
             <p className="text-sm text-gray-500 mb-4 break-all px-2">{fileName}</p>
-            <Button variant="outline" size="sm" type="button" onClick={clearFile}>
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={clearFile}
+              className={compact ? "h-auto max-w-full whitespace-normal" : undefined}
+            >
               Changer de fichier
             </Button>
           </div>
@@ -129,7 +139,7 @@ export function UploadZone({
           <div
             className={cn(
               "flex flex-col items-center w-full",
-              hasFile ? "hidden" : "block"
+              hasFile ? "hidden" : "flex"
             )}
           >
             <div className="w-16 h-16 bg-soptima-100 rounded-full flex items-center justify-center mb-4">

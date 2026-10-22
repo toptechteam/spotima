@@ -87,7 +87,7 @@ const UploadPage = () => {
   }, [toolId]);
 
   const canSubmit = isSolyon
-    ? Boolean(targetFile && targetFile2 && (sourceFile || sourceFile2))
+    ? Boolean((targetFile || targetFile2) && (sourceFile || sourceFile2))
     : isLcFitness
     ? Boolean(targetFile && (sourceFile || sourceFile2))
     : Boolean(sourceFile && targetFile);
@@ -101,7 +101,9 @@ const UploadPage = () => {
 
     try {
       const formData = new FormData();
-      formData.append("target_file", targetFile as File);
+      if (targetFile) {
+        formData.append("target_file", targetFile);
+      }
       if (isSolyon && targetFile2) {
         formData.append("target_file_2", targetFile2);
       }
@@ -166,7 +168,7 @@ const UploadPage = () => {
         return;
       }
 
-      downloadFile(id, data.row_status);
+      downloadFile(id, data.row_status, data.output_files || []);
     } catch (error) {
       console.error("Status check failed:", error);
       setIsProcessing(false);
@@ -178,21 +180,35 @@ const UploadPage = () => {
     }
   };
 
-  const downloadFile = async (id: string, status: string) => {
-    try {
-      const response = await fetch(API_BASE_URL + `/file-processing/download/${id}/`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get("content-disposition");
-      const filename = contentDisposition
+  const fetchOutput = async (id: string, index: number, knownName?: string) => {
+    const query = index > 1 ? `?index=${index}` : "";
+    const response = await fetch(API_BASE_URL + `/file-processing/download/${id}/${query}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Download failed");
+    }
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get("content-disposition");
+    const name =
+      knownName ||
+      (contentDisposition
         ? contentDisposition.split("filename=")[1].replace(/['"]/g, "")
-        : `converted_${new Date().toISOString().split("T")[0]}.xlsx`;
+        : `converted_${new Date().toISOString().split("T")[0]}.xlsx`);
+    return { name, url: window.URL.createObjectURL(blob) };
+  };
 
-      const downloadUrl = window.URL.createObjectURL(blob);
+  const downloadFile = async (id: string, status: string, outputFiles: string[]) => {
+    try {
+      // SO'LYON can produce two separate PayFit files; other tools produce one.
+      const files =
+        outputFiles.length > 1
+          ? await Promise.all(outputFiles.map((name, i) => fetchOutput(id, i + 1, name)))
+          : [await fetchOutput(id, 1, outputFiles[0])];
+
       setIsProcessing(false);
       navigate(`/download/${toolId}`, {
         state: {
@@ -200,8 +216,9 @@ const UploadPage = () => {
           status: status,
           originalFileName: sourceFile?.name,
           targetFileName: targetFile?.name,
-          convertedFileName: filename,
-          downloadUrl: JSON.stringify(downloadUrl),
+          convertedFileName: files[0].name,
+          downloadUrl: JSON.stringify(files[0].url),
+          files,
           toolName: toolDisplayName,
         },
       });
@@ -219,7 +236,7 @@ const UploadPage = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12" translate="no">
-        <div className="max-w-4xl mx-auto">
+        <div className={isSolyon ? "max-w-6xl mx-auto" : "max-w-4xl mx-auto"}>
           <Button
             variant="ghost"
             className="mb-8 text-gray-500 hover:text-gray-700"
@@ -235,7 +252,7 @@ const UploadPage = () => {
             </h1>
             <p className="text-gray-500">
               {isSolyon
-                ? "SO'LYON MUTUELLE : importez le fichier Données_paie, le fichier Silae, ou les deux — puis les deux modèles PayFit (import_variables_paie et import_salaire_net)."
+                ? "SO'LYON MUTUELLE : importez le fichier Données_paie, le fichier Silae, ou les deux (.xlsx, .xls ou .csv) — puis au moins un modèle PayFit. Un fichier PayFit est généré pour chaque modèle importé."
                 : isLcFitness
                 ? "LC FITNESS : choisissez le fichier comptable, le fichier salaire, ou les deux — puis le modèle PayFit."
                 : "Notre outil va convertir automatiquement vos données en utilisant le fichier source et le modèle PayFit."}
@@ -244,55 +261,50 @@ const UploadPage = () => {
 
           {/* SO'LYON: two source files + two PayFit templates */}
           {isSolyon ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  1. Données_paie
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Fichier source Données_paie (optionnel)
-                </p>
-                <UploadZone
-                  onFileUpload={setSourceFile}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  2. Silae
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Fichier source Silae (optionnel)
-                </p>
-                <UploadZone
-                  onFileUpload={setSourceFile2}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  3. Modèle import_variables_paie
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Modèle PayFit import_variables_paie (obligatoire)
-                </p>
-                <UploadZone
-                  onFileUpload={setTargetFile}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  4. Modèle import_salaire_net
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Modèle PayFit import_salaire_net (obligatoire)
-                </p>
-                <UploadZone
-                  onFileUpload={setTargetFile2}
-                  acceptedFileTypes=".xlsx,.xls"
-                />
-              </div>
+            // Subgrid: titles share one row track and drop zones another, so the
+            // zones line up even when a title or description wraps.
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8">
+              {[
+                {
+                  title: "1. Données_paie",
+                  hint: "Fichier source (optionnel)",
+                  onFile: setSourceFile,
+                  types: ".xlsx,.xls,.csv",
+                },
+                {
+                  title: "2. Silae",
+                  hint: "Fichier source (optionnel)",
+                  onFile: setSourceFile2,
+                  types: ".xlsx,.xls,.csv",
+                },
+                {
+                  title: "3. import_variables_paie",
+                  hint: "Modèle PayFit (au moins un modèle requis)",
+                  onFile: setTargetFile,
+                  types: ".xlsx",
+                },
+                {
+                  title: "4. import_salaire_net",
+                  hint: "Modèle PayFit (au moins un modèle requis)",
+                  onFile: setTargetFile2,
+                  types: ".xlsx",
+                },
+              ].map((slot) => (
+                <div key={slot.title} className="grid grid-rows-subgrid row-span-2 gap-y-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2 break-words">
+                      {slot.title}
+                    </h2>
+                    <p className="text-sm text-gray-600">{slot.hint}</p>
+                  </div>
+                  <UploadZone
+                    onFileUpload={slot.onFile}
+                    acceptedFileTypes={slot.types}
+                    compact
+                    className="h-full min-w-0 [&>div]:h-full"
+                  />
+                </div>
+              ))}
             </div>
           ) : (
           /* Stable DOM: always mount both optional source zones; hide salaire for non-LC */
@@ -368,7 +380,7 @@ const UploadPage = () => {
             {!canSubmit && (
               <p className="text-sm text-gray-500 mt-2">
                 {isSolyon
-                  ? "Uploadez au moins un fichier source (Données_paie et/ou Silae) et les deux modèles PayFit"
+                  ? "Uploadez au moins un fichier source (Données_paie et/ou Silae) et au moins un modèle PayFit"
                   : isLcFitness
                   ? "Uploadez au moins un fichier source (comptable et/ou salaire) et le modèle PayFit"
                   : "Veuillez uploader les deux fichiers pour continuer"}
