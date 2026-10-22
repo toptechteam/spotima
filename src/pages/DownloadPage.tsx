@@ -22,6 +22,7 @@ const DownloadPage = () => {
     originalFileName?: string;
     convertedFileName?: string;
     downloadUrl: any
+    files?: { name: string; url: string }[];
     id: string;
     status: string;
   } | undefined;
@@ -30,14 +31,16 @@ const DownloadPage = () => {
 
   const convertedFileName = state?.convertedFileName || "payfit_import.xlsx";
 
-  const handleDownload = () => {
-    // Simulate file download
-    // In a real app, this would trigger an actual file download
-    const element = document.createElement("a");
-    element.setAttribute("download", convertedFileName);
-    const url = JSON.parse(state.downloadUrl);
+  // SO'LYON passes one entry per generated PayFit file; other tools pass a single URL.
+  const files =
+    state?.files && state.files.length > 0
+      ? state.files
+      : [{ name: convertedFileName, url: state?.downloadUrl ? JSON.parse(state.downloadUrl) : "" }];
 
-    element.setAttribute("href", url);
+  const handleDownload = (file: { name: string; url: string }) => {
+    const element = document.createElement("a");
+    element.setAttribute("download", file.name);
+    element.setAttribute("href", file.url);
     document.body.appendChild(element);
     element.click();
     element.remove();
@@ -77,7 +80,7 @@ const DownloadPage = () => {
       <div className="container mx-auto px-4 py-16">
         <DownloadResult
           data={data}
-          fileName={convertedFileName}
+          files={files}
           onDownload={handleDownload}
           onRestart={handleRestart}
         />
